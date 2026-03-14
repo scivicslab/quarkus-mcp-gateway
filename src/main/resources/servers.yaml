@@ -1,0 +1,16 @@
+# MCP Gateway - Server Registry
+# Servers listed here are auto-registered on startup.
+#
+# Each entry:
+#   name:        unique identifier (used in proxy URL: /mcp/{name})
+#   url:         base URL of the MCP server
+#   description: optional human-readable description
+
+servers:
+  - name: coder-agent
+    url: http://localhost:8090
+    description: Quarkus Coder Agent (Claude AI)
+
+  - name: workflow-editor
+    url: http://localhost:8081
+    description: Turing Workflow Editor
