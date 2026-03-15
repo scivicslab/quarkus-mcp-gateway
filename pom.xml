@@ -55,6 +55,12 @@
             <artifactId>quarkus-vertx</artifactId>
         </dependency>
 
+        <!-- Scheduler for periodic health checks -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-scheduler</artifactId>
+        </dependency>
+
         <!-- YAML parsing -->
         <dependency>
             <groupId>org.yaml</groupId>

@@ -29,6 +29,9 @@ public class AutoRegistrar {
     @Inject
     ServerRegistry registry;
 
+    @Inject
+    HealthChecker healthChecker;
+
     void onStart(@Observes StartupEvent event) {
         Map<String, Object> config = loadConfig();
         if (config == null) {
@@ -53,8 +56,9 @@ public class AutoRegistrar {
                     continue;
                 }
 
-                registry.register(name, url, description != null ? description : "");
-                logger.info("Auto-registered: " + name + " -> " + url);
+                var serverEntry = registry.register(name, url, description != null ? description : "");
+                boolean up = healthChecker.check(serverEntry);
+                logger.info("Auto-registered: " + name + " -> " + url + " (" + (up ? "healthy" : "down") + ")");
             }
         }
     }

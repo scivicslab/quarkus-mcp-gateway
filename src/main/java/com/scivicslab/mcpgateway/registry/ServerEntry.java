@@ -21,7 +21,7 @@ public class ServerEntry {
         this.url = url;
         this.description = description;
         this.registeredAt = Instant.now();
-        this.healthy = true;
+        this.healthy = false; // unknown until checked
     }
 
     public String getName() { return name; }

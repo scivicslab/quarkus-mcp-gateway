@@ -7,10 +7,10 @@
 #   description: optional human-readable description
 
 servers:
-  - name: coder-agent
+  - name: llm-console-claude
     url: http://localhost:8090
-    description: Quarkus Coder Agent (Claude AI)
+    description: LLM Console - Claude
 
   - name: workflow-editor
-    url: http://localhost:8081
+    url: http://localhost:8091
     description: Turing Workflow Editor
