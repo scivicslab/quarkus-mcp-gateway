@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Gateway</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>MCP Gateway</h1>
+        <div class="header-controls">
+            <label>Theme:
+                <select id="theme-select">
+                    <option value="dark-catppuccin">Dark Catppuccin</option>
+                    <option value="dark-nord">Dark Nord</option>
+                    <option value="dark-blue">Dark Blue</option>
+                    <option value="dark-green">Dark Green</option>
+                    <option value="dark-red">Dark Red</option>
+                    <option value="light-clean">Light Clean</option>
+                    <option value="light-warm">Light Warm</option>
+                    <option value="light-blue">Light Blue</option>
+                    <option value="light-green">Light Green</option>
+                    <option value="light-red">Light Red</option>
+                </select>
+            </label>
+        </div>
+    </header>
+
+    <main>
+        <section>
+            <p class="info-line">Proxy endpoint: <code>POST /mcp/{serverName}</code> &nbsp;|&nbsp; History aggregation: <code>GET /api/history</code></p>
+        </section>
+
+        <section>
+            <h2>Registered Servers</h2>
+            <div id="server-table-area">
+                <p class="empty-message">Loading...</p>
+            </div>
+            <div class="refresh-bar">
+                <span id="last-refresh"></span>
+                <button id="refresh-btn" title="Refresh now">Refresh</button>
+            </div>
+        </section>
+
+        <section>
+            <div class="discover-panel">
+                <h3>Service Discovery</h3>
+                <div class="form-row">
+                    <div class="form-field" style="flex:0 0 140px">
+                        <label for="discover-host">Host</label>
+                        <input id="discover-host" placeholder="localhost" value="localhost">
+                    </div>
+                    <div class="form-field">
+                        <label for="discover-ports">Ports</label>
+                        <input id="discover-ports" placeholder="28000-29000" value="28000-29000">
+                    </div>
+                    <button id="discover-btn" class="btn-discover">Discover</button>
+                </div>
+                <span id="discover-status"></span>
+                <div id="discover-results"></div>
+            </div>
+        </section>
+
+        <section>
+            <div class="register-form">
+                <h3>Register Server</h3>
+                <form id="register-form">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="reg-name">Name</label>
+                            <input id="reg-name" placeholder="e.g. coder-agent" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="reg-url">URL</label>
+                            <input id="reg-url" placeholder="e.g. http://localhost:8090" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="reg-desc">Description</label>
+                            <input id="reg-desc" placeholder="optional">
+                        </div>
+                        <button type="submit" class="btn-register">Register</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

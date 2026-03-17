@@ -1,0 +1,12 @@
+# MCP Gateway - Service Discovery Configuration
+# Define hosts and port ranges to scan for MCP servers.
+# If this file is absent, defaults to localhost:28000-29000.
+#
+# Each target:
+#   host:   hostname or IP address (default: localhost)
+#   ports:  port range (e.g. "28000-29000") or comma-separated (e.g. "28000,28080,28090")
+
+discovery:
+  targets:
+    - host: localhost
+      ports: "28000-29000"
