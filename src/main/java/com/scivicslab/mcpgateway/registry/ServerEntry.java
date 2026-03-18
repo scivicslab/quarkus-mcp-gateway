@@ -13,6 +13,8 @@ public class ServerEntry {
     private Instant registeredAt;
     private Instant lastHealthCheck;
     private boolean healthy;
+    private Instant unhealthySince;
+    private boolean discovered;
 
     public ServerEntry() {}
 
@@ -22,6 +24,8 @@ public class ServerEntry {
         this.description = description;
         this.registeredAt = Instant.now();
         this.healthy = false; // unknown until checked
+        this.unhealthySince = null;
+        this.discovered = false;
     }
 
     public String getName() { return name; }
@@ -41,4 +45,10 @@ public class ServerEntry {
 
     public boolean isHealthy() { return healthy; }
     public void setHealthy(boolean healthy) { this.healthy = healthy; }
+
+    public Instant getUnhealthySince() { return unhealthySince; }
+    public void setUnhealthySince(Instant unhealthySince) { this.unhealthySince = unhealthySince; }
+
+    public boolean isDiscovered() { return discovered; }
+    public void setDiscovered(boolean discovered) { this.discovered = discovered; }
 }

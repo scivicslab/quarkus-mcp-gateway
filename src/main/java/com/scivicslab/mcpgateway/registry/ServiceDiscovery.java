@@ -121,6 +121,7 @@ public class ServiceDiscovery {
         for (DiscoveredServer ds : servers) {
             String description = ds.version() != null ? ds.name() + " v" + ds.version() : ds.name();
             ServerEntry entry = registry.register(ds.name(), ds.url(), description);
+            entry.setDiscovered(true);
             healthChecker.check(entry);
             registered.add(entry);
             logger.info("Discovery registered: " + ds.name() + " -> " + ds.url());

@@ -6,6 +6,8 @@ A lightweight MCP (Model Context Protocol) endpoint gateway built with Java and 
 
 - **Name-based routing**: Send MCP requests to `/mcp/{serverName}` instead of remembering port numbers
 - **Server registry**: Register/unregister MCP servers via REST API or YAML config
+- **Service discovery**: Scan port ranges to automatically find MCP servers
+- **Health checking**: Periodic health checks (every 30s) with automatic removal of unreachable discovered servers after 1 hour
 - **Session management**: Automatically tracks backend `Mcp-Session-Id` per client
 - **Auto-registration**: Pre-configure servers in `servers.yaml`
 - **HTML dashboard**: View all registered servers at `/`
@@ -69,6 +71,36 @@ curl -X POST http://localhost:8888/mcp/coder-agent \
   -d '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {...}}'
 ```
 
+### Service discovery
+
+Scan a port range to find MCP servers automatically:
+
+```bash
+# Scan using discovery.yaml defaults
+curl -X POST http://localhost:8888/api/discover
+
+# Scan with explicit host/ports
+curl -X POST http://localhost:8888/api/discover \
+  -H 'Content-Type: application/json' \
+  -d '{"host": "localhost", "ports": "28000-29000"}'
+
+# Discover and register in one step
+curl -X POST http://localhost:8888/api/discover/register
+```
+
+Configure scan targets in `discovery.yaml`:
+
+```yaml
+discovery:
+  targets:
+    - host: localhost
+      ports: "28000-29000"
+```
+
+### Health checking
+
+Health checks run every 30 seconds against all registered servers. Discovered servers (registered via service discovery) that remain unhealthy for over **1 hour** are automatically removed from the registry. Servers registered via `servers.yaml` or REST API are never auto-removed.
+
 ### Unregister a server
 
 ```bash
@@ -84,6 +116,10 @@ curl -X DELETE http://localhost:8888/api/servers/my-agent
 | `GET` | `/api/servers` | List all registered servers |
 | `GET` | `/api/servers/{name}` | Look up a server by name |
 | `DELETE` | `/api/servers/{name}` | Unregister a server |
+| `POST` | `/api/discover` | Scan for MCP servers |
+| `POST` | `/api/discover/register` | Discover and register servers |
+| `GET` | `/api/sessions/{sessionId}` | Fetch session metadata |
+| `GET` | `/api/history?limit=50` | Aggregate history from all servers |
 | `GET` | `/` | HTML dashboard |
 
 ## Architecture
