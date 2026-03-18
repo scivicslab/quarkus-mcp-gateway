@@ -6,7 +6,7 @@
 
     <groupId>com.scivicslab</groupId>
     <artifactId>quarkus-mcp-gateway</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>Quarkus MCP Gateway</name>
     <description>MCP endpoint gateway — register, discover, and proxy MCP servers by name</description>
@@ -103,4 +103,19 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <activation>
+                <property>
+                    <name>native</name>
+                </property>
+            </activation>
+            <properties>
+                <skipITs>true</skipITs>
+                <quarkus.native.enabled>true</quarkus.native.enabled>
+            </properties>
+        </profile>
+    </profiles>
 </project>
