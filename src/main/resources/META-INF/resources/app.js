@@ -138,7 +138,7 @@
     }
 
     function loadServers() {
-        fetch('/api/servers')
+        fetch('api/servers')
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 currentServers = data;
@@ -153,7 +153,7 @@
 
     function deleteServer(name) {
         if (!confirm('Delete server "' + name + '"?')) return;
-        fetch('/api/servers/' + encodeURIComponent(name), { method: 'DELETE' })
+        fetch('api/servers/' + encodeURIComponent(name), { method: 'DELETE' })
             .then(function () { loadServers(); })
             .catch(function (err) { alert('Delete failed: ' + err); });
     }
@@ -166,7 +166,7 @@
         var url = document.getElementById('reg-url').value.trim();
         var desc = document.getElementById('reg-desc').value.trim();
 
-        fetch('/api/servers', {
+        fetch('api/servers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name, url: url, description: desc })
@@ -204,7 +204,7 @@
         discoverStatus.textContent = '';
         discoverResults.innerHTML = '';
 
-        fetch('/api/discover', {
+        fetch('api/discover', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ host: host, ports: ports })
@@ -273,7 +273,7 @@
                         return;
                     }
 
-                    fetch('/api/discover/register', {
+                    fetch('api/discover/register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(toRegister)
