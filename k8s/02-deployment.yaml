@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quarkus-mcp-gateway
+  namespace: mcp-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quarkus-mcp-gateway
+  template:
+    metadata:
+      labels:
+        app: quarkus-mcp-gateway
+    spec:
+      containers:
+      - name: quarkus-mcp-gateway
+        image: 192.168.5.23:32000/quarkus-mcp-gateway:1.0.0-2603302116
+        imagePullPolicy: Always
+        env:
+        - name: JAVA_OPTS
+          value: "-Xms128m -Xmx256m"
+        ports:
+        - containerPort: 8888
+          name: http
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/servers
+            port: 8888
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/servers
+            port: 8888
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        volumeMounts:
+        - name: servers-config
+          mountPath: /deployments/servers.yaml
+          subPath: servers.yaml
+      volumes:
+      - name: servers-config
+        configMap:
+          name: mcp-gateway-servers

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-gateway-servers
+  namespace: mcp-gateway
+data:
+  servers.yaml: |
+    # MCP Gateway - Server Registry (k8s)
+    servers:
+      - name: wikipedia-search
+        url: http://quarkus-docusearch.docusearch:28080
+        description: Wikipedia full-text search via OpenSearch

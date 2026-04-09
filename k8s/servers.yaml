@@ -1,0 +1,7 @@
+# MCP Gateway - Server Registry (k8s)
+# Uses k8s DNS for cross-namespace service resolution.
+
+servers:
+  - name: wikipedia-search
+    url: http://quarkus-docusearch.docusearch:28080
+    description: Wikipedia full-text search via OpenSearch
