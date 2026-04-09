@@ -1,6 +1,8 @@
 package com.scivicslab.mcpgateway.registry;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 
 import java.util.Collection;
 import java.util.Map;
@@ -20,6 +22,9 @@ public class ServerRegistry {
 
     private final Map<String, ServerEntry> servers = new ConcurrentHashMap<>();
 
+    @Inject
+    Event<ServerRegistryEvent> registryEvent;
+
     /**
      * Register or update an MCP server.
      */
@@ -27,6 +32,7 @@ public class ServerRegistry {
         var entry = new ServerEntry(name, normalizeUrl(url), description);
         servers.put(name, entry);
         logger.info("Registered MCP server: " + name + " -> " + url);
+        registryEvent.fire(new ServerRegistryEvent(name, "registered"));
         return entry;
     }
 
@@ -37,6 +43,7 @@ public class ServerRegistry {
         var removed = servers.remove(name);
         if (removed != null) {
             logger.info("Unregistered MCP server: " + name);
+            registryEvent.fire(new ServerRegistryEvent(name, "unregistered"));
         }
         return removed != null;
     }

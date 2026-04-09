@@ -34,7 +34,7 @@ Edit `servers.yaml` to pre-register MCP servers:
 
 ```yaml
 servers:
-  - name: coder-agent
+  - name: chat-ui
     url: http://localhost:8090
     description: Quarkus Coder Agent (Claude AI)
 
@@ -65,8 +65,8 @@ curl http://localhost:8888/api/servers
 
 ```bash
 # Instead of: POST http://localhost:8090/mcp
-# Use:        POST http://localhost:8888/mcp/coder-agent
-curl -X POST http://localhost:8888/mcp/coder-agent \
+# Use:        POST http://localhost:8888/mcp/chat-ui
+curl -X POST http://localhost:8888/mcp/chat-ui \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {...}}'
 ```
@@ -127,13 +127,13 @@ curl -X DELETE http://localhost:8888/api/servers/my-agent
 ```
 MCP Client (workflow-editor, CLI, etc.)
     │
-    │  POST /mcp/coder-agent
+    │  POST /mcp/chat-ui
     ▼
 ┌──────────────────────┐
 │   MCP Gateway :8888  │
 │                      │
 │  Registry            │
-│   coder-agent → :8090│
+│   chat-ui → :8090│
 │   workflow    → :8081│
 │                      │
 │  Proxy               │

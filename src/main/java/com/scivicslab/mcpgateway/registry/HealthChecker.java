@@ -1,5 +1,6 @@
 package com.scivicslab.mcpgateway.registry;
 
+import com.scivicslab.mcpgateway.tools.ToolAggregator;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -27,6 +28,9 @@ public class HealthChecker {
 
     @Inject
     ServerRegistry registry;
+
+    @Inject
+    ToolAggregator toolAggregator;
 
     /**
      * Check a single server's health. Returns true if reachable.
@@ -56,6 +60,10 @@ public class HealthChecker {
             boolean healthy = check(entry);
             if (was != healthy) {
                 logger.info("Server " + entry.getName() + " is now " + (healthy ? "healthy" : "down"));
+                if (healthy) {
+                    // Server came back up: refresh its tools
+                    toolAggregator.refreshServer(entry.getName());
+                }
             }
             if (!healthy && entry.isDiscovered()
                     && entry.getUnhealthySince() != null
