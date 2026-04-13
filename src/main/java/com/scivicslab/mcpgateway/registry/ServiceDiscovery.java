@@ -196,7 +196,10 @@ public class ServiceDiscovery {
             JsonNode serverInfo = result.get("serverInfo");
             if (serverInfo == null) return null;
 
-            String name = serverInfo.has("name") ? serverInfo.get("name").asText() : "mcp-" + host + "-" + port;
+            String baseName = serverInfo.has("name") ? serverInfo.get("name").asText() : "mcp";
+            // Append port to ensure uniqueness, but skip if baseName already ends with "-{port}".
+            String portSuffix = "-" + port;
+            String name = baseName.endsWith(portSuffix) ? baseName : baseName + portSuffix;
             String version = serverInfo.has("version") ? serverInfo.get("version").asText() : null;
 
             boolean alreadyRegistered = registry.lookup(name).isPresent();

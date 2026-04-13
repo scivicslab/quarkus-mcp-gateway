@@ -4,6 +4,7 @@ import com.scivicslab.mcpgateway.registry.ServerEntry;
 import com.scivicslab.mcpgateway.registry.ServerRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +32,9 @@ public class McpProxy {
 
     @Inject
     ServerRegistry registry;
+
+    @ConfigProperty(name = "quarkus.http.port", defaultValue = "8888")
+    int httpPort;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -161,7 +165,7 @@ public class McpProxy {
 
                 sessionMeta.put(sessionId, meta);
 
-                String callerUrl = "http://localhost:8888/api/sessions/" + sessionId;
+                String callerUrl = "http://localhost:" + httpPort + "/api/sessions/" + sessionId;
 
                 ObjectNode rootObj = (ObjectNode) root;
                 ObjectNode params = root.has("params") ? (ObjectNode) root.get("params") : mapper.createObjectNode();
