@@ -66,52 +66,82 @@ public class McpProxy {
         String sessionKey = serverName + ":" + (clientSessionId != null ? clientSessionId : "default");
 
         try {
-            // Parse JSON-RPC to inspect method and inject _caller
             String forwardBody = injectCaller(jsonRpcBody, sessionKey, serverName, remoteAddress);
-
             HttpClient client = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(10))
                     .build();
 
-            var requestBuilder = HttpRequest.newBuilder()
-                    .uri(URI.create(targetUrl))
-                    .header("Content-Type", "application/json")
-                    .header("Accept", "application/json, text/event-stream")
-                    .timeout(TIMEOUT)
-                    .POST(HttpRequest.BodyPublishers.ofString(forwardBody));
+            // Attempt the request; if the backend rejects our cached session (404/session error),
+            // clear it and retry once with a fresh initialize.
+            for (int attempt = 0; attempt < 2; attempt++) {
+                var requestBuilder = HttpRequest.newBuilder()
+                        .uri(URI.create(targetUrl))
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/json, text/event-stream")
+                        .timeout(TIMEOUT)
+                        .POST(HttpRequest.BodyPublishers.ofString(forwardBody));
 
-            // Forward backend session ID if we have one
-            String backendSessionId = backendSessions.get(sessionKey);
-            if (backendSessionId != null) {
-                requestBuilder.header("Mcp-Session-Id", backendSessionId);
+                String backendSessionId = backendSessions.get(sessionKey);
+                if (backendSessionId != null) {
+                    requestBuilder.header("Mcp-Session-Id", backendSessionId);
+                }
+
+                HttpResponse<String> response = client.send(
+                        requestBuilder.build(),
+                        HttpResponse.BodyHandlers.ofString());
+
+                // Session expired (backend restarted): re-initialize and retry once
+                if (attempt == 0 && response.statusCode() == 404
+                        && backendSessions.containsKey(sessionKey)) {
+                    logger.info("Backend session expired for " + serverName + ", re-initializing");
+                    backendSessions.remove(sessionKey);
+                    reinitialize(client, targetUrl, sessionKey, serverName);
+                    continue;
+                }
+
+                // Capture new backend session ID
+                response.headers().firstValue("Mcp-Session-Id").ifPresent(sid -> {
+                    backendSessions.put(sessionKey, sid);
+                    String sidKey = serverName + ":" + sid;
+                    backendSessions.put(sidKey, sid);
+                    String callerName = callerNames.get(sessionKey);
+                    if (callerName != null) callerNames.put(sidKey, callerName);
+                });
+
+                return new ProxyResult(
+                        response.statusCode(),
+                        response.body(),
+                        response.headers().firstValue("Content-Type").orElse("application/json"),
+                        backendSessions.get(sessionKey));
             }
 
-            HttpResponse<String> response = client.send(
-                    requestBuilder.build(),
-                    HttpResponse.BodyHandlers.ofString());
-
-            // Capture backend session ID and map it for future lookups
-            response.headers().firstValue("Mcp-Session-Id").ifPresent(sid -> {
-                backendSessions.put(sessionKey, sid);
-                // Also map by backend session ID so client can use it directly
-                String sidKey = serverName + ":" + sid;
-                backendSessions.put(sidKey, sid);
-                // Copy caller name to session-based key
-                String callerName = callerNames.get(sessionKey);
-                if (callerName != null) {
-                    callerNames.put(sidKey, callerName);
-                }
-            });
-
-            return new ProxyResult(
-                    response.statusCode(),
-                    response.body(),
-                    response.headers().firstValue("Content-Type").orElse("application/json"),
-                    backendSessions.get(sessionKey));
+            return ProxyResult.error(502, "Failed after session re-initialization");
 
         } catch (Exception e) {
             logger.log(Level.WARNING, "Proxy to " + serverName + " failed", e);
             return ProxyResult.error(502, "Proxy error: " + e.getMessage());
+        }
+    }
+
+    private void reinitialize(HttpClient client, String targetUrl, String sessionKey, String serverName) {
+        try {
+            String body = "{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"initialize\","
+                    + "\"params\":{\"protocolVersion\":\"2024-11-05\","
+                    + "\"capabilities\":{},\"clientInfo\":{\"name\":\"mcp-gateway\",\"version\":\"1.0.0\"}}}";
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(targetUrl))
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/json, text/event-stream")
+                    .timeout(Duration.ofSeconds(30))
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+            HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+            resp.headers().firstValue("Mcp-Session-Id").ifPresent(sid -> {
+                backendSessions.put(sessionKey, sid);
+                logger.info("Re-initialized session for " + serverName + ": " + sid);
+            });
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Re-initialization failed for " + serverName, e);
         }
     }
 

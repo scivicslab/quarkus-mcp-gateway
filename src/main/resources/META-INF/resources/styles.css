@@ -493,6 +493,67 @@ td code {
     margin-top: 8px;
 }
 
+/* Aggregated Tools */
+.server-tools-summary {
+    cursor: pointer;
+    padding: 8px 4px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.server-tools-summary::before {
+    content: '▶';
+    font-size: 10px;
+    transition: transform 0.15s;
+}
+
+details[open] > .server-tools-summary::before {
+    transform: rotate(90deg);
+}
+
+.tool-count {
+    font-weight: normal;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.tools-table {
+    margin: 0 0 12px 16px;
+    width: calc(100% - 16px);
+}
+
+.tools-table td.tool-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+details {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+}
+
+details:last-child {
+    border-bottom: none;
+}
+
+.stdio-summary {
+    color: var(--accent-mauve);
+}
+
+.stdio-badge {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--accent-mauve);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 11px;
+    color: var(--accent-mauve);
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;

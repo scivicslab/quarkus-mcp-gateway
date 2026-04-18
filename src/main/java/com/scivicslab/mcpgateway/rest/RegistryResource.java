@@ -2,6 +2,7 @@ package com.scivicslab.mcpgateway.rest;
 
 import com.scivicslab.mcpgateway.registry.ServerEntry;
 import com.scivicslab.mcpgateway.registry.ServerRegistry;
+import com.scivicslab.mcpgateway.tools.ToolAggregator;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -12,10 +13,12 @@ import java.util.Map;
 /**
  * REST API for managing the MCP server registry.
  *
- * POST   /api/servers         - register a server
- * GET    /api/servers         - list all servers
- * GET    /api/servers/{name}  - lookup a server
- * DELETE /api/servers/{name}  - unregister a server
+ * POST   /api/servers                  - register a server
+ * GET    /api/servers                  - list all servers
+ * GET    /api/servers/{name}           - lookup a server
+ * DELETE /api/servers/{name}           - unregister a server
+ * POST   /api/servers/{name}/refresh   - refresh tool cache for a server
+ * POST   /api/servers/refresh          - refresh tool cache for all servers
  */
 @Path("/api/servers")
 @Produces(MediaType.APPLICATION_JSON)
@@ -24,6 +27,9 @@ public class RegistryResource {
 
     @Inject
     ServerRegistry registry;
+
+    @Inject
+    ToolAggregator toolAggregator;
 
     public record RegisterRequest(String name, String url, String description) {}
 
@@ -57,5 +63,21 @@ public class RegistryResource {
             return Map.of("status", "ok", "message", "Unregistered: " + name);
         }
         throw new NotFoundException("Server not found: " + name);
+    }
+
+    @POST
+    @Path("/{name}/refresh")
+    public Map<String, String> refreshServer(@PathParam("name") String name) {
+        registry.lookup(name)
+                .orElseThrow(() -> new NotFoundException("Server not found: " + name));
+        toolAggregator.refreshServer(name);
+        return Map.of("status", "ok", "message", "Refreshed tools for: " + name);
+    }
+
+    @POST
+    @Path("/refresh")
+    public Map<String, String> refreshAll() {
+        toolAggregator.refreshAll();
+        return Map.of("status", "ok", "message", "Refreshed tools for all servers");
     }
 }

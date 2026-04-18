@@ -296,9 +296,95 @@
     // --- Refresh ---
     document.getElementById('refresh-btn').addEventListener('click', function () {
         loadServers();
+        loadTools();
     });
+
+    // --- Aggregated Tools ---
+    var toolsArea = document.getElementById('tools-area');
+    var cachedTools = [];
+    var cachedStdioServers = [];
+
+    function loadTools() {
+        var p1 = fetch('api/tools')
+            .then(function (res) { return res.json(); })
+            .then(function (tools) { cachedTools = tools; })
+            .catch(function () { cachedTools = []; });
+
+        var p2 = fetch('api/stdio/servers')
+            .then(function (res) { return res.json(); })
+            .then(function (servers) { cachedStdioServers = servers; })
+            .catch(function () { cachedStdioServers = []; });
+
+        Promise.all([p1, p2]).then(function () {
+            renderTools(cachedTools, cachedStdioServers);
+        });
+    }
+
+    function renderTools(tools, stdioServers) {
+        var hasHttp = tools && tools.length > 0;
+        var hasStdio = stdioServers && stdioServers.length > 0;
+
+        if (!hasHttp && !hasStdio) {
+            toolsArea.innerHTML = '<p class="empty-message">No tools available.</p>';
+            return;
+        }
+
+        var html = '';
+
+        // HTTP servers grouped by name
+        if (hasHttp) {
+            var byServer = {};
+            for (var i = 0; i < tools.length; i++) {
+                var t = tools[i];
+                var srv = t.server || '(unknown)';
+                if (!byServer[srv]) byServer[srv] = [];
+                byServer[srv].push(t);
+            }
+
+            var serverNames = Object.keys(byServer).sort();
+            for (var s = 0; s < serverNames.length; s++) {
+                var name = serverNames[s];
+                var stools = byServer[name];
+                html += '<details open><summary class="server-tools-summary">' +
+                    escapeHtml(name) + ' <span class="tool-count">(' + stools.length + ')</span></summary>' +
+                    '<table class="tools-table"><thead><tr><th>Qualified Name</th><th>Description</th></tr></thead><tbody>';
+                for (var j = 0; j < stools.length; j++) {
+                    var tool = stools[j];
+                    html += '<tr>' +
+                        '<td><code>' + escapeHtml(tool.qualifiedName) + '</code></td>' +
+                        '<td class="tool-desc">' + escapeHtml(tool.description || '') + '</td>' +
+                        '</tr>';
+                }
+                html += '</tbody></table></details>';
+            }
+        }
+
+        // stdio servers
+        if (hasStdio) {
+            html += '<details open><summary class="server-tools-summary stdio-summary">' +
+                'stdio servers <span class="tool-count stdio-badge">stdio</span></summary>' +
+                '<table class="tools-table"><thead><tr><th>Name</th><th>Endpoint</th><th>Status</th></tr></thead><tbody>';
+            for (var k = 0; k < stdioServers.length; k++) {
+                var sp = stdioServers[k];
+                var aliveClass = sp.alive ? 'status-healthy' : 'status-unhealthy';
+                var aliveText = sp.alive ? 'alive' : 'dead';
+                html += '<tr>' +
+                    '<td class="server-name">' + escapeHtml(sp.name) + '</td>' +
+                    '<td><code>POST ' + escapeHtml(sp.endpoint) + '</code></td>' +
+                    '<td class="' + aliveClass + '">' + aliveText + '</td>' +
+                    '</tr>';
+            }
+            html += '</tbody></table></details>';
+        }
+
+        toolsArea.innerHTML = html;
+    }
 
     // Auto-refresh
     loadServers();
-    refreshTimer = setInterval(loadServers, REFRESH_INTERVAL);
+    loadTools();
+    refreshTimer = setInterval(function () {
+        loadServers();
+        loadTools();
+    }, REFRESH_INTERVAL);
 })();

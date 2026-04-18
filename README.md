@@ -122,6 +122,56 @@ curl -X DELETE http://localhost:8888/api/servers/my-agent
 | `GET` | `/api/history?limit=50` | Aggregate history from all servers |
 | `GET` | `/` | HTML dashboard |
 
+## Built-in Agent Tools
+
+The gateway exposes several built-in MCP tools that any connected agent can call.
+
+### Agent-to-Agent Communication
+
+Two tools handle inter-agent messaging.  Both look up the target by name from the registry, so neither side needs to hard-code ports.
+
+#### `call_agent` (recommended)
+
+Sends a prompt to a named agent and **blocks until the reply arrives** (up to 5 minutes).  The caller gets the reply directly — no polling required.
+
+```
+call_agent(agent, prompt, [model], [caller]) → reply text
+```
+
+Use this when you need the other agent's answer inline in your conversation.
+
+#### `submit_to_agent` (fire-and-forget)
+
+Submits a prompt and returns immediately with a UUID.  The caller is then responsible for polling `getPromptStatus(UUID)` on the target until done, then calling `getPromptResult(UUID)`.
+
+```
+submit_to_agent(agent, prompt, [model], [caller]) → UUID
+```
+
+Use this only when you want to do other work while the target agent is thinking, or when you need fine-grained control over the polling loop.
+
+> **Design note**: the submit/poll/get split exists because `submitPrompt`, `getPromptStatus`, and `getPromptResult` are the low-level MCP tools that `quarkus-chat-ui` exposes.  `call_agent` wraps all three in a single synchronous call inside the gateway, so the LLM never has to manage the polling loop itself.  This is important for weaker models (e.g., Qwen3) that may not reliably chain three tool calls in the correct order.
+
+#### `list_agents`
+
+Lists all registered agents (name, URL, health status).  Use the name with `call_agent` or `submit_to_agent`.
+
+### Typical multi-agent workflow
+
+```
+Agent A (Claude, :28100)          MCP Gateway (:28081)        Agent B (Qwen3, :28102)
+         │                                │                              │
+         │── call_agent("qwen3", ...) ───▶│                              │
+         │                                │── submitPrompt ─────────────▶│
+         │                                │                   (thinking) │
+         │                                │◀─────────────── UUID ────────│
+         │                                │── getPromptStatus (polling)  │
+         │                                │── getPromptStatus (polling)  │
+         │                                │── getPromptResult ──────────▶│
+         │                                │◀────────────── reply ────────│
+         │◀──────────── reply ────────────│                              │
+```
+
 ## Architecture
 
 ```
