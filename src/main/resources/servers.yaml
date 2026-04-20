@@ -30,10 +30,3 @@ servers:
   - name: chat-ui-28102
     url: http://localhost:28102
     description: Chat UI (port 28102)
-
-# stdio-backed MCP servers — launched as subprocesses by StdioLauncher on startup.
-# Accessible individually at /mcp/{name}, or aggregated at /mcp/_all.
-# Note: the built-in "fetch" tool is always available at /mcp/_all without configuration.
-stdio:
-  - name: filesystem
-    command: npx -y @modelcontextprotocol/server-filesystem /home/devteam

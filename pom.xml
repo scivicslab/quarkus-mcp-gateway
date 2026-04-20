@@ -68,13 +68,6 @@
             <version>2.4</version>
         </dependency>
 
-        <!-- HTML parsing for built-in fetch tool -->
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.18.3</version>
-        </dependency>
-
         <!-- Full-text search index for biotools -->
         <dependency>
             <groupId>org.apache.lucene</groupId>
@@ -85,18 +78,6 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-queryparser</artifactId>
             <version>9.11.1</version>
-        </dependency>
-
-        <!-- Document text extraction for built-in tika tool (PDF, Word, Excel, PPT, ...) -->
-        <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-core</artifactId>
-            <version>2.9.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-parsers-standard-package</artifactId>
-            <version>2.9.2</version>
         </dependency>
 
         <!-- Test -->

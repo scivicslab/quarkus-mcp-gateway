@@ -16,7 +16,7 @@ import java.util.Map;
  * POST   /api/servers                  - register a server
  * GET    /api/servers                  - list all servers
  * GET    /api/servers/{name}           - lookup a server
- * DELETE /api/servers/{name}           - unregister a server
+ * DELETE /api/servers/{name}           - detach (unregister) a server
  * POST   /api/servers/{name}/refresh   - refresh tool cache for a server
  * POST   /api/servers/refresh          - refresh tool cache for all servers
  */
@@ -60,7 +60,7 @@ public class RegistryResource {
     @Path("/{name}")
     public Map<String, String> unregister(@PathParam("name") String name) {
         if (registry.unregister(name)) {
-            return Map.of("status", "ok", "message", "Unregistered: " + name);
+            return Map.of("status", "ok", "message", "Detached: " + name);
         }
         throw new NotFoundException("Server not found: " + name);
     }

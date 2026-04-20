@@ -106,7 +106,7 @@
                 '<td><code>POST /mcp/' + escapeHtml(s.name) + '</code></td>' +
                 '<td class="' + statusClass + '">' + statusText + '</td>' +
                 '<td class="timestamp">' + formatTime(s.lastHealthCheck) + '</td>' +
-                '<td><button class="btn-delete" data-name="' + escapeHtml(s.name) + '">Delete</button></td>' +
+                '<td><button class="btn-detach" data-name="' + escapeHtml(s.name) + '">Detach</button></td>' +
                 '</tr>';
         }
 
@@ -128,11 +128,11 @@
             });
         }
 
-        // Attach delete handlers
-        var deleteButtons = tableArea.querySelectorAll('.btn-delete');
-        for (var j = 0; j < deleteButtons.length; j++) {
-            deleteButtons[j].addEventListener('click', function () {
-                deleteServer(this.getAttribute('data-name'));
+        // Attach detach button handlers
+        var detachButtons = tableArea.querySelectorAll('.btn-detach');
+        for (var j = 0; j < detachButtons.length; j++) {
+            detachButtons[j].addEventListener('click', function () {
+                detachServer(this.getAttribute('data-name'));
             });
         }
     }
@@ -151,11 +151,11 @@
             });
     }
 
-    function deleteServer(name) {
-        if (!confirm('Delete server "' + name + '"?')) return;
+    function detachServer(name) {
+        if (!confirm('Detach "' + name + '" from the registry?')) return;
         fetch('api/servers/' + encodeURIComponent(name), { method: 'DELETE' })
             .then(function () { loadServers(); })
-            .catch(function (err) { alert('Delete failed: ' + err); });
+            .catch(function (err) { alert('Detach failed: ' + err); });
     }
 
     // --- Registration form ---
@@ -320,7 +320,18 @@
         });
     }
 
+    // Track open/closed state of tool detail panels across re-renders
+    var toolsOpenState = {};  // key → boolean (true = open)
+
+    function saveToolsOpenState() {
+        toolsArea.querySelectorAll('details[data-key]').forEach(function (el) {
+            toolsOpenState[el.getAttribute('data-key')] = el.open;
+        });
+    }
+
     function renderTools(tools, stdioServers) {
+        saveToolsOpenState();
+
         var hasHttp = tools && tools.length > 0;
         var hasStdio = stdioServers && stdioServers.length > 0;
 
@@ -330,6 +341,11 @@
         }
 
         var html = '';
+
+        function detailsOpen(key) {
+            // First render: open by default. Subsequent renders: respect saved state.
+            return key in toolsOpenState ? (toolsOpenState[key] ? ' open' : '') : ' open';
+        }
 
         // HTTP servers grouped by name
         if (hasHttp) {
@@ -345,7 +361,9 @@
             for (var s = 0; s < serverNames.length; s++) {
                 var name = serverNames[s];
                 var stools = byServer[name];
-                html += '<details open><summary class="server-tools-summary">' +
+                var key = 'http-' + name;
+                html += '<details' + detailsOpen(key) + ' data-key="' + escapeHtml(key) + '">' +
+                    '<summary class="server-tools-summary">' +
                     escapeHtml(name) + ' <span class="tool-count">(' + stools.length + ')</span></summary>' +
                     '<table class="tools-table"><thead><tr><th>Qualified Name</th><th>Description</th></tr></thead><tbody>';
                 for (var j = 0; j < stools.length; j++) {
@@ -361,7 +379,9 @@
 
         // stdio servers
         if (hasStdio) {
-            html += '<details open><summary class="server-tools-summary stdio-summary">' +
+            var stdioKey = 'stdio';
+            html += '<details' + detailsOpen(stdioKey) + ' data-key="' + stdioKey + '">' +
+                '<summary class="server-tools-summary stdio-summary">' +
                 'stdio servers <span class="tool-count stdio-badge">stdio</span></summary>' +
                 '<table class="tools-table"><thead><tr><th>Name</th><th>Endpoint</th><th>Status</th></tr></thead><tbody>';
             for (var k = 0; k < stdioServers.length; k++) {

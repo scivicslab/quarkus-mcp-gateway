@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.scivicslab.mcpgateway.builtin.AllToolsCache;
 import com.scivicslab.mcpgateway.builtin.BuiltinTool;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
@@ -38,6 +39,7 @@ public class AggregatingBridge {
 
     @Inject StdioRegistry registry;
     @Inject Instance<BuiltinTool> builtinTools;
+    @Inject AllToolsCache allToolsCache;
 
     /** Maps tool name → server name (stdio server name, or BUILTIN_SERVER). Rebuilt on each tools/list call. */
     private final ConcurrentHashMap<String, String> toolToServer = new ConcurrentHashMap<>();
@@ -113,6 +115,18 @@ public class AggregatingBridge {
                 logger.warning("tools/list failed for server '" + proc.getName() + "': " + e.getMessage());
             }
         }
+
+        // Update AllToolsCache for FindToolsTool to search (exclude find_tools itself)
+        java.util.List<AllToolsCache.Entry> cacheEntries = new java.util.ArrayList<>();
+        for (JsonNode t : merged) {
+            String n = t.path("name").asText();
+            if ("find_tools".equals(n)) continue;
+            cacheEntries.add(new AllToolsCache.Entry(
+                    n,
+                    t.path("description").asText(""),
+                    t.path("inputSchema").toString()));
+        }
+        allToolsCache.update(cacheEntries);
 
         ObjectNode result = mapper.createObjectNode();
         result.set("tools", merged);

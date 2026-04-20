@@ -312,7 +312,7 @@ td code {
 }
 
 /* Action buttons in table */
-.btn-delete {
+.btn-detach {
     background: none;
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
@@ -324,7 +324,7 @@ td code {
     transition: color 0.15s, border-color 0.15s;
 }
 
-.btn-delete:hover {
+.btn-detach:hover {
     color: var(--accent-red);
     border-color: var(--accent-red);
 }
