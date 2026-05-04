@@ -27,9 +27,18 @@ public class ServerRegistry {
 
     /**
      * Register or update an MCP server.
+     * If another entry already exists with the same URL, skip and return the existing entry.
      */
     public ServerEntry register(String name, String url, String description) {
-        var entry = new ServerEntry(name, normalizeUrl(url), description);
+        String normalizedUrl = normalizeUrl(url);
+        for (ServerEntry existing : servers.values()) {
+            if (existing.getUrl().equals(normalizedUrl) && !existing.getName().equals(name)) {
+                logger.info("Skipping duplicate URL registration: " + name + " -> " + url
+                        + " (already registered as " + existing.getName() + ")");
+                return existing;
+            }
+        }
+        var entry = new ServerEntry(name, normalizedUrl, description);
         servers.put(name, entry);
         logger.info("Registered MCP server: " + name + " -> " + url);
         registryEvent.fire(new ServerRegistryEvent(name, "registered"));

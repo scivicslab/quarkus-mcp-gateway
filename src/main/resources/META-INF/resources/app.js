@@ -299,6 +299,21 @@
         loadTools();
     });
 
+    // --- Detach All ---
+    document.getElementById('detach-all-btn').addEventListener('click', function () {
+        if (!confirm('Detach all servers from the registry?')) return;
+        fetch('api/servers')
+            .then(function (r) { return r.json(); })
+            .then(function (servers) {
+                var deletes = servers.map(function (s) {
+                    return fetch('api/servers/' + encodeURIComponent(s.name), { method: 'DELETE' });
+                });
+                return Promise.all(deletes);
+            })
+            .then(function () { loadServers(); loadTools(); })
+            .catch(function (err) { alert('Detach all failed: ' + err); });
+    });
+
     // --- Aggregated Tools ---
     var toolsArea = document.getElementById('tools-area');
     var cachedTools = [];
