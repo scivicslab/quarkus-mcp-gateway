@@ -37,6 +37,9 @@ public class ToolAggregator {
     @Inject
     ServerRegistry registry;
 
+    @Inject
+    com.scivicslab.mcpgateway.builtin.AllToolsCache allToolsCache;
+
     private final ObjectMapper mapper = new ObjectMapper();
     private final AtomicInteger rpcIdCounter = new AtomicInteger(1);
 
@@ -94,6 +97,12 @@ public class ToolAggregator {
             List<ToolInfo> tools = listTools(mcpUrl, serverName, mcpSessions.get(serverName));
             toolsByServer.put(serverName, tools);
             logger.info("Refreshed " + tools.size() + " tools from server: " + serverName);
+
+            List<com.scivicslab.mcpgateway.builtin.AllToolsCache.Entry> cacheEntries = tools.stream()
+                    .map(t -> new com.scivicslab.mcpgateway.builtin.AllToolsCache.Entry(
+                            t.name(), t.description(), t.inputSchema().toString(), serverName))
+                    .toList();
+            allToolsCache.updateServer(serverName, cacheEntries);
 
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to refresh tools from " + serverName, e);

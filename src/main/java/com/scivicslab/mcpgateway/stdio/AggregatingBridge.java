@@ -116,17 +116,29 @@ public class AggregatingBridge {
             }
         }
 
-        // Update AllToolsCache for FindToolsTool to search (exclude find_tools itself)
-        java.util.List<AllToolsCache.Entry> cacheEntries = new java.util.ArrayList<>();
-        for (JsonNode t : merged) {
-            String n = t.path("name").asText();
-            if ("find_tools".equals(n)) continue;
-            cacheEntries.add(new AllToolsCache.Entry(
-                    n,
-                    t.path("description").asText(""),
-                    t.path("inputSchema").toString()));
+        // Update AllToolsCache: builtin tools and each stdio server's tools separately
+        java.util.List<AllToolsCache.Entry> builtinEntries = new java.util.ArrayList<>();
+        for (BuiltinTool tool : builtinTools) {
+            if ("find_tools".equals(tool.name())) continue;
+            builtinEntries.add(new AllToolsCache.Entry(
+                    tool.name(), tool.description(), tool.inputSchema(), BUILTIN_SERVER));
         }
-        allToolsCache.update(cacheEntries);
+        allToolsCache.updateServer(BUILTIN_SERVER, builtinEntries);
+
+        for (StdioProcess proc : registry.all()) {
+            if (!proc.isAlive()) continue;
+            java.util.List<AllToolsCache.Entry> stdioEntries = new java.util.ArrayList<>();
+            for (JsonNode t : merged) {
+                String serverForTool = toolToServer.get(t.path("name").asText());
+                if (!proc.getName().equals(serverForTool)) continue;
+                stdioEntries.add(new AllToolsCache.Entry(
+                        t.path("name").asText(),
+                        t.path("description").asText(""),
+                        t.path("inputSchema").toString(),
+                        proc.getName()));
+            }
+            allToolsCache.updateServer(proc.getName(), stdioEntries);
+        }
 
         ObjectNode result = mapper.createObjectNode();
         result.set("tools", merged);
